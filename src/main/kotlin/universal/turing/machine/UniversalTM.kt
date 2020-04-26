@@ -1,23 +1,32 @@
-package main.kotlin.universal.turing.machine
+package universal.turing.machine
 
-data class UniversalTM(val transitions: Map<Pair<Int, Int>, Triple<Int, Int, Int>>,
-                       val leftSide: MutableList<Int> = arrayListOf(), val rightSide: MutableList<Int>,
-                       var currentValue: Int, var currentState: Int = 0) {
+data class UniversalTM(val leftSide: MutableList<Char> = mutableListOf(), val rightSide: MutableList<Char>,
+                       var currentValue: Char = '_', var currentState: Int = 0, var transitionCount: Int = 0,
+                       val tmCode: String, val stepMode: Boolean = false) {
 
-    @ExperimentalStdlibApi
-    fun moveRight() {
+    private var transitions: Map<Pair<Int, Char>, Triple<Int, Char, Int>> = mapOf()
+    private val mappings: Map<Int, Char> = mapOf(1 to '0', 2 to '1', 3 to '_')
+
+    private fun parseCode() {
+        val transitionList = tmCode.toBigInteger().toString(2).removePrefix("1").split("11")
+        val transitionMap = transitionList.map { transition -> transition.split("1") }
+        transitions =  transitionMap.map { (currentState, read, nextState, write, direction) ->
+            Pair(currentState.length - 1, mappings.getOrDefault(read.length, '_')) to
+                    Triple(nextState.length - 1, mappings.getOrDefault(write.length, '_'), direction.length - 1)
+        }.toMap()
+    }
+
+    private fun moveRight() {
         leftSide.add(0, currentValue)
-        currentValue = rightSide.removeFirst()
+        currentValue = if (rightSide.isNotEmpty()) rightSide.removeAt(0) else '_'
     }
 
-    @ExperimentalStdlibApi
-    fun moveLeft() {
+    private fun moveLeft() {
         rightSide.add(0, currentValue)
-        currentValue = leftSide.removeFirst()
+        currentValue = if (leftSide.isNotEmpty()) leftSide.removeAt(0) else '_'
     }
 
-    @ExperimentalStdlibApi
-    fun makeTransition(transitionKey: Pair<Int, Int>) {
+    private fun makeTransition(transitionKey: Pair<Int, Char>) {
         val (nextState, write, direction) = transitions.getValue(transitionKey)
         currentState = nextState
         currentValue = write
@@ -25,12 +34,49 @@ data class UniversalTM(val transitions: Map<Pair<Int, Int>, Triple<Int, Int, Int
             0 -> moveLeft()
             1 -> moveRight()
         }
+        transitionCount++
+    }
+
+    fun run() {
+        parseCode()
+        moveRight()
+        while (transitions.containsKey(Pair(currentState, currentValue))) {
+            makeTransition(Pair(currentState, currentValue))
+            if (stepMode) printStep()
+        }
+        printResult()
+    }
+
+    private fun printStep() {
+        println("Current state: $currentState")
+        println("Tape: ${toLengthFifteen(leftSide, true)} $currentValue ${toLengthFifteen(rightSide)}")
+        println("Current position:                   ^")
+        println("Transition count: $transitionCount \n")
+    }
+
+    private fun toLengthFifteen(list: MutableList<Char>, reverse: Boolean = false): String {
+        val tempList = list.toMutableList()
+        while (tempList.size != 15) {
+            if (tempList.size > 15) tempList.removeAt(15)
+            else tempList.add('_')
+        }
+        if (reverse) tempList.reverse()
+        return tempList.toString().filter { setOf('0', '1', ' ', '_').contains(it) }
+    }
+
+    private fun printResult() {
+        print("Unary result: ")
+        rightSide.forEach(::print)
+        println("\nDecimal result: ${rightSide.size}")
     }
 }
 
+/**
+ * Starts the program. Set stepMode to false if you only want to see the final result.
+ * rightSide represents the starting state of the tape. The large number is the coded TM.
+ */
 fun main() {
-    val utm = UniversalTM(transitions = parseUTM("1217045072201469412578714245820597635027236544671968829780823713123069689986813927338821662279672905006655217995918035865910973352031467859221814481965580242702565444"),
-            rightSide = "0000000100000".split("").filter { it.isNotEmpty() }.map { it.toInt() * -1 }.toMutableList(),
-            currentValue = -1)
-    println(utm)
+    val utm = UniversalTM(tmCode = "1106896044986087338273786595728413553867755167331751026523146459232608078731851847492632456542247323756677661219400391122176351573196943766522763913199684",
+            rightSide = "0000000000000_00000000000000000".toCharArray().toMutableList(), stepMode = true)
+    utm.run()
 }
