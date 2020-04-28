@@ -1,9 +1,11 @@
 package universal.turing.machine
 
-data class UniversalTM(val leftSide: MutableList<Char> = mutableListOf(), val rightSide: MutableList<Char>,
-                       var currentValue: Char = '_', var currentState: Int = 0, var transitionCount: Int = 0,
+data class UniversalTM(val rightSide: MutableList<Char>, val leftSide: MutableList<Char> = mutableListOf(),
                        val tmCode: String, val stepMode: Boolean = false) {
 
+    private var currentValue: Char = '_'
+    private var currentState: Int = 0
+    private var transitionCount: Int = 0
     private var transitions: Map<Pair<Int, Char>, Triple<Int, Char, Int>> = mapOf()
     private val mappings: Map<Int, Char> = mapOf(1 to '0', 2 to '1', 3 to '_')
 
@@ -40,6 +42,7 @@ data class UniversalTM(val leftSide: MutableList<Char> = mutableListOf(), val ri
     fun run() {
         parseCode()
         moveRight()
+        printStep()
         while (transitions.containsKey(Pair(currentState, currentValue))) {
             makeTransition(Pair(currentState, currentValue))
             if (stepMode) printStep()
@@ -76,7 +79,7 @@ data class UniversalTM(val leftSide: MutableList<Char> = mutableListOf(), val ri
  * rightSide represents the starting state of the tape. The large number is the coded TM.
  */
 fun main() {
-    val utm = UniversalTM(tmCode = "1106896044986087338273786595728413553867755167331751026523146459232608078731851847492632456542247323756677661219400391122176351573196943766522763913199684",
-            rightSide = "0000000000000_00000000000000000".toCharArray().toMutableList(), stepMode = true)
+    val utm = UniversalTM(tmCode = "81674512232238591408904823617637055087764453572221080810000448372556826544927522424830633551796455204968828408454807771424858041261628927130256499084767704751648519620657220",
+            rightSide = "_0000000".toCharArray().toMutableList(), stepMode = true)
     utm.run()
 }
