@@ -42,7 +42,7 @@ data class UniversalTM(val rightSide: MutableList<Char>, val leftSide: MutableLi
     fun run() {
         parseCode()
         moveRight()
-        printStep()
+        if (stepMode) printStep()
         while (transitions.containsKey(Pair(currentState, currentValue))) {
             makeTransition(Pair(currentState, currentValue))
             if (stepMode) printStep()
@@ -80,6 +80,6 @@ data class UniversalTM(val rightSide: MutableList<Char>, val leftSide: MutableLi
  */
 fun main() {
     val utm = UniversalTM(tmCode = "81674512232238591408904823617637055087764453572221080810000448372556826544927522424830633551796455204968828408454807771424858041261628927130256499084767704751648519620657220",
-            rightSide = "_0000000".toCharArray().toMutableList(), stepMode = true)
+            rightSide = "0000_00000".toCharArray().toMutableList(), stepMode = false)
     utm.run()
 }
